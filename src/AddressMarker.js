@@ -6,7 +6,7 @@
 
 class AddressMarker{
         constructor(input, latLngObj) {            
-            this.inputData = input;  
+            this.input = input;
              let marker = new google.maps.Marker({ //this represents the actual google map marker object attched to the marker
                 position: new google.maps.LatLng(latLngObj.lat, latLngObj.lng),
                 map: map,
