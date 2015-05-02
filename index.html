@@ -1,0 +1,28 @@
+<html>
+    <head>
+    <title>test</title>    
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDELKm4_z8F7B8efGn9UouNOY12Tic4YWM&libraries=drawing,geometry&sensor=true"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.8.0/lodash.min.js"></script>    
+    <script src="dist/turfcut.js"></script>
+        
+
+    </head>
+    <body>
+    <div style="width:600px; height: 600px;" id="map"/>
+    
+    <script>
+        function ready(fn) {
+            if (document.readyState != 'loading'){
+                fn();
+            else 
+            document.addEventListener('DOMContentLoaded', fn);    
+        }
+            
+        var sampleData = [{name: "Ray", location: {lat: 40.00, lng: -85.12}},{name: "hevily", location: {lat: 41.00, lng: -85.12}}];
+        ready(function () {
+           // TurfCut.init({});
+        });
+
+    </script>    
+    </body>
+</html>
