@@ -5,6 +5,45 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.8.0/lodash.min.js"></script>    
     <script src="dist/turfcut.js"></script>
         
+    <style>
+        .turfcut_drawing_control {
+            padding: 5px;
+        }
+        .turfcut_pointer_control {
+          background: url(data:image/png;base64,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) no-repeat white;
+            background-size: contain;
+            border-style: solid;
+            border-width: 2px;
+            border-color: black;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+            width: 32px;
+            height: 32px;
+            content: "";
+        }
+
+         .turfcut_polygon_control {
+            margin-left: 5px;
+          background: url( data:image/png;base64,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) no-repeat white;
+            background-size: contain;
+            border-style: solid;
+            border-width: 2px;
+            border-color: black;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+            width: 32px;
+            height: 32px;
+             content: "";
+        }
+
+
+        .turfcut_polygon_control.active,
+        .turfcut_pointer_control.active {
+            border-color: red;
+        }
+    </style>
 
     </head>
     <body>
@@ -12,7 +51,7 @@
     
     <script>
         function ready(fn) {
-            if (document.readyState != 'loading'){
+            if (document.readyState != 'loading')
                 fn();
             else 
             document.addEventListener('DOMContentLoaded', fn);    
@@ -20,7 +59,7 @@
             
         var sampleData = [{name: "Ray", location: {lat: 40.00, lng: -85.12}},{name: "hevily", location: {lat: 41.00, lng: -85.12}}];
         ready(function () {
-           // TurfCut.init({});
+           TurfCut.init('map');
         });
 
     </script>    

@@ -54,36 +54,142 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/*jslint node: true */
+	/*jslint esnext: true*/
 	'use strict';
 
-	var TurfCut = __webpack_require__(1);
+	var InstanceStore = __webpack_require__(1);
+	var Initializers = __webpack_require__(2);
+
+	module.exports = {
+	    init: function init(mapId) {
+	        var gmapOpts = arguments[1] === undefined ? {} : arguments[1];
+	        var dmOpts = arguments[2] === undefined ? {} : arguments[2];
+
+	        Initializers.initMap(mapId, gmapOpts);
+	        Initializers.initDrawingManager(dmOpts);
+	    },
+	    instances: InstanceStore
+	};
 
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
+
+	module.exports = {
+	    map: null,
+	    drawingManager: null,
+	    pointerControl: null,
+	    polygonControl: null
+	};
+
+/***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/*jslint node: true */
 	/*jslint esnext: true*/
 	/*global google*/
-	/*global map*/
-	"use strict";
+	/*global _*/
 
-	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+	'use strict';
 
-	var AddressMarker = function AddressMarker(input, latLngObj) {
-	    _classCallCheck(this, AddressMarker);
+	var InstanceStore = __webpack_require__(1);
+	var Utils = __webpack_require__(3);
 
-	    this.inputData = input;
-	    var marker = new google.maps.Marker({ //this represents the actual google map marker object attched to the marker
-	        position: new google.maps.LatLng(latLngObj.lat, latLngObj.lng),
-	        map: map,
-	        address: this //provide a reference to the parent marker,                
-	    });
+	module.exports = {
+	    initMap: function initMap(mapId) {
+	        var opts = arguments[1] === undefined ? {} : arguments[1];
 
-	    marker.assignToPolygon = function () {};
+	        _.extend(opts, {
+	            zoom: 4,
+	            center: new google.maps.LatLng(39.644, -85.48615),
+	            panControl: false
+	        });
+
+	        InstanceStore.map = new google.maps.Map(document.getElementById(mapId), opts);
+	    },
+
+	    initDrawingManager: function initDrawingManager() {
+	        var opts = arguments[0] === undefined ? {} : arguments[0];
+
+	        var dm = undefined,
+	            drawingControlDiv = undefined;
+	        var defaultOpts = { //default drawing options
+	            drawingMode: google.maps.drawing.OverlayType.POLYGON,
+	            drawingControl: false,
+	            polygonOptions: {
+	                fillColor: Utils.getRandomHexColor(),
+	                fillOpacity: 0.4,
+	                strokeWeight: 4,
+	                clickable: true,
+	                editable: true
+	            }
+	        };
+	        _.extend(opts, defaultOpts);
+
+	        dm = InstanceStore.drawingManager = new google.maps.drawing.DrawingManager(opts); //create the drawing manager
+	        dm.setMap(InstanceStore.map); //attach drawing manager to the map
+
+	        drawingControlDiv = document.createElement('div');
+	        drawingControlDiv.classList.add('turfcut_drawing_control');
+
+	        //Add pointer control
+	        InstanceStore.pointerControl = this.initPointerControl(drawingControlDiv, dm);
+	        //Add polygon control
+	        InstanceStore.polygonControl = this.initPolygonControl(drawingControlDiv, dm);
+
+	        drawingControlDiv.index = 1;
+
+	        //append controls to the map
+	        InstanceStore.map.controls[google.maps.ControlPosition.TOP_CENTER].push(drawingControlDiv);
+	        return dm;
+	    },
+	    initPointerControl: function initPointerControl(controlDiv, dm) {
+	        var controlUI = document.createElement('div');
+	        controlUI.className = 'turfcut_pointer_control';
+	        controlDiv.appendChild(controlUI);
+
+	        //event listeners
+	        google.maps.event.addDomListener(controlUI, 'click', function () {
+	            controlUI.classList.add('active');
+	            InstanceStore.polygonControl.classList.remove('active');
+	            dm.setDrawingMode(null);
+	        });
+	        return controlUI;
+	    },
+	    initPolygonControl: function initPolygonControl(controlDiv, dm) {
+	        var controlUI = document.createElement('div');
+	        controlUI.className = 'turfcut_polygon_control';
+	        controlDiv.appendChild(controlUI);
+
+	        //Event listeners
+	        google.maps.event.addDomListener(controlUI, 'click', function () {
+	            controlUI.classList.add('active');
+	            InstanceStore.pointerControl.classList.remove('active');
+	            dm.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+	        });
+
+	        return controlUI;
+	    }
 	};
 
-	module.exports = AddressMarker;
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*jslint node: true */
+	/*jslint esnext: true*/
+
+	'use strict';
+
+	module.exports = {
+	  getRandomHexColor: function getRandomHexColor() {
+	    return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	  }
+	};
 
 /***/ }
 /******/ ])
