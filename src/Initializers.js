@@ -49,6 +49,7 @@ module.exports = {
         InstanceStore.map.controls[google.maps.ControlPosition.TOP_CENTER].push(drawingControlDiv);
        return dm;
     },
+
     initPointerControl(controlDiv, dm) {
         let controlUI = document.createElement('div');
         controlUI.className = 'turfcut_pointer_control';
@@ -62,6 +63,7 @@ module.exports = {
         });
         return controlUI;
     },
+
     initPolygonControl(controlDiv, dm) {
         let controlUI = document.createElement('div');
         controlUI.className = 'turfcut_polygon_control';

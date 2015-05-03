@@ -69,12 +69,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        Initializers.initMap(mapId, gmapOpts);
 	        Initializers.initDrawingManager(dmOpts);
 	    },
-	    instances: InstanceStore
+	    mapComponents: InstanceStore
 	};
 
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
+
+	/*jslint node: true */
+	/*jslint esnext: true*/
 
 	"use strict";
 
@@ -147,6 +150,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        InstanceStore.map.controls[google.maps.ControlPosition.TOP_CENTER].push(drawingControlDiv);
 	        return dm;
 	    },
+
 	    initPointerControl: function initPointerControl(controlDiv, dm) {
 	        var controlUI = document.createElement('div');
 	        controlUI.className = 'turfcut_pointer_control';
@@ -160,6 +164,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 	        return controlUI;
 	    },
+
 	    initPolygonControl: function initPolygonControl(controlDiv, dm) {
 	        var controlUI = document.createElement('div');
 	        controlUI.className = 'turfcut_polygon_control';
