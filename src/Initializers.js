@@ -4,6 +4,7 @@
 /*global _*/
 
 let InstanceStore = require('./InstanceStore');
+let RxGoogleMaps = require('./rx_googlemaps');
 let Utils = require('./utils');
 
 module.exports = {
@@ -15,20 +16,14 @@ module.exports = {
         });
 
         InstanceStore.map = new google.maps.Map(document.getElementById(mapId), opts);
+
     },
 
     initDrawingManager(opts = {}) {
         let dm, drawingControlDiv;
         let defaultOpts = {  //default drawing options
             drawingMode: google.maps.drawing.OverlayType.POLYGON,
-            drawingControl: false,
-            polygonOptions: {
-                fillColor: Utils.getRandomHexColor(),
-                fillOpacity: 0.40,
-                strokeWeight: 4,
-                clickable: true,
-                editable: true
-            }
+            drawingControl: false
         };
         _.extend(opts, defaultOpts);
 

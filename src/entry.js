@@ -2,6 +2,7 @@
 /*jslint esnext: true*/
 "use strict";
 
+let EventListeners = require('./EventListeners');
 let InstanceStore = require('./InstanceStore');
 let Initializers = require('./Initializers');
 
