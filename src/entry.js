@@ -10,6 +10,7 @@ module.exports = {
     init(mapId, gmapOpts = {}, dmOpts = {}) {
         Initializers.initMap(mapId, gmapOpts);
         Initializers.initDrawingManager(dmOpts);
+        EventListeners.overlayComplete(InstanceStore.drawingManager);
     },
     mapComponents: InstanceStore
 };

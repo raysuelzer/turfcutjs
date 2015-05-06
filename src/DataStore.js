@@ -2,3 +2,7 @@
 /*jslint esnext: true*/
 
 "use strict";
+
+module.exports = {
+    polygons: []
+};

@@ -4,7 +4,6 @@
 /*global _*/
 
 let InstanceStore = require('./InstanceStore');
-let RxGoogleMaps = require('./rx_googlemaps');
 let Utils = require('./utils');
 
 module.exports = {
