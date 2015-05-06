@@ -1,16 +1,14 @@
 /*jslint node: true */
 /*jslint esnext: true*/
 /*global google*/
-/*global map*/
-"use strict";
-let DataStore = require('../DataStore');
-let InstanceStore = require('../InstanceStore');
-let Utils = require('../utils');
-let EventListeners = require('../EventListeners');
+///*global map*/
 
-var mapevents =  google.maps.event;
+"use strict";
+let Utils = require('../utils');
+let mapevents =  google.maps.event;
 
 module.exports = function Polygon(polygon) {
+         let Actions = require('../Actions');
           let opts = {
                 fillColor: Utils.getRandomHexColor(),
                 fillOpacity: 0.40,
@@ -22,9 +20,9 @@ module.exports = function Polygon(polygon) {
             polygon.setOptions(opts); //set the options
 
             //Wire events to this polygon
-    console.log(EventListeners);
-            mapevents.addListener(polygon.getPath(), 'set_at',  EventListeners.polygonChanged);
-            mapevents.addListener(polygon.getPath(), 'insert_at',  EventListeners.polygonChanged);
+            //TODO: consider if this makes sense here
+            mapevents.addListener(polygon.getPath(), 'set_at',  () => Actions.polygonChanged(polygon));
+            mapevents.addListener(polygon.getPath(), 'insert_at',  () => Actions.polygonChanged(polygon));
 
         return polygon;
     };

@@ -58,9 +58,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/*jslint esnext: true*/
 	'use strict';
 
-	var EventListeners = __webpack_require__(1);
+	var Actions = __webpack_require__(1);
 	var InstanceStore = __webpack_require__(2);
-	var Initializers = __webpack_require__(3);
+	var DataStore = __webpack_require__(3);
+	var Initializers = __webpack_require__(4);
 
 	module.exports = {
 	    init: function init(mapId) {
@@ -69,9 +70,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        Initializers.initMap(mapId, gmapOpts);
 	        Initializers.initDrawingManager(dmOpts);
-	        EventListeners.overlayComplete(InstanceStore.drawingManager);
+	        Actions.overlayComplete();
 	    },
-	    mapComponents: InstanceStore
+	    mapComponents: InstanceStore,
+	    dataStore: DataStore,
+	    actions: Actions
 	};
 
 /***/ },
@@ -81,31 +84,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	/*jslint node: true */
 	/*jslint esnext: true*/
 	/*global google*/
-	/*global _*/
+	///*global _*/
 
 	'use strict';
 
 	var InstanceStore = __webpack_require__(2);
-	var DataStore = __webpack_require__(4);
+	var DataStore = __webpack_require__(3);
 	var Polygon = __webpack_require__(5);
-	var Utils = __webpack_require__(6);
+	var AddressMarker = __webpack_require__(6);
 
 	var mapevents = google.maps.event;
 
-	var EventListeners = {
+	var Actions = {
 	    overlayComplete: function overlayComplete() {
 	        mapevents.addListener(InstanceStore.drawingManager, 'overlaycomplete', function (e) {
 	            var polygon = Polygon(e.overlay);
-	            console.log(polygon);
-	            DataStore.polygons.push(polygon);
+	            DataStore.addPolygon(polygon);
 	        });
 	    },
-	    polygonChanged: function polygonChanged(e) {
-	        console.log(e);
+	    polygonChanged: function polygonChanged(polygon) {
+	        //Todo: make this emit an event
+	        DataStore.getTurfs();
+	        return polygon;
+	    },
+	    loadMarkers: function loadMarkers(arr, mapFn) {
+	        if (mapFn === undefined) mapFn = function (i) {
+	            return i;
+	        };
+
+	        var parsedMarkers = arr.map(mapFn).map(function (item) {
+	            return AddressMarker(item);
+	        });
+
+	        DataStore.addMarkers(parsedMarkers);
+	        return parsedMarkers;
 	    }
 	};
 
-	module.exports = EventListeners;
+	module.exports = Actions;
 
 /***/ },
 /* 2 */
@@ -132,10 +148,93 @@ return /******/ (function(modules) { // webpackBootstrap
 	/*global google*/
 	/*global _*/
 
+	"use strict";
+
+	var geometry = google.maps.geometry;
+	var data = {
+	    polygons: [],
+	    markers: []
+	};
+
+	var calculateTurfs = function calculateTurfs() {
+	    var turfs = data.polygons.map(function (polygon) {
+	        return {
+	            polygon: polygon,
+	            markers: data.markers.filter(function (marker) {
+	                return geometry.poly.containsLocation(marker.getPosition(), polygon);
+	            })
+	        };
+	    });
+
+	    var duplicateMarkers = turfs.map(function (x) {
+	        return x.markers;
+	    }).reduce(function (a, b) {
+	        return a.concat(b);
+	    }).filter(function (value, index, self) {
+	        return self.indexOf(value) !== index;
+	    });
+
+	    var deDuped = turfs.map(function (turf) {
+	        var r = {}; //resulting object
+	        r.polygon = turf.polygon;
+	        r.markers = _.difference(turf.markers, duplicateMarkers);
+
+	        _.remove(duplicateMarkers, function (marker) {
+	            return turf.markers.indexOf(marker) !== -1;
+	        });
+
+	        return r;
+	    });
+
+	    var result = deDuped.filter(function (turf) {
+	        if (turf.markers.length === 0) {
+	            turf.polygon.setMap(null);
+	            //TODO: this is modifying the internal store of the polygons.
+	            //It is not being treated as immutable.
+	            _.pull(data.polygons, turf.polygon);
+	            return false;
+	        }
+	        return true;
+	    });
+	    return result;
+	};
+
+	module.exports = {
+	    addPolygon: function addPolygon(polygon) {
+	        data.polygons.push(polygon);
+	    },
+	    getPolygons: function getPolygons() {
+	        return data.polygons;
+	    },
+	    //use for bulk adding markers
+	    addMarkers: function addMarkers(markers) {
+	        var _markers = data.markers.concat(markers);
+	        if (data.polygons.length > 0) calculateTurfs();
+
+	        return _markers;
+	    },
+	    //use for small number of markers
+	    addMarker: function addMarker(marker) {
+	        return data.markers.push(marker);
+	    },
+	    getTurfs: function getTurfs() {
+	        return calculateTurfs();
+	    }
+	};
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*jslint node: true */
+	/*jslint esnext: true*/
+	/*global google*/
+	/*global _*/
+
 	'use strict';
 
 	var InstanceStore = __webpack_require__(2);
-	var Utils = __webpack_require__(6);
+	var Utils = __webpack_require__(7);
 
 	module.exports = {
 	    initMap: function initMap(mapId) {
@@ -210,55 +309,68 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*jslint node: true */
-	/*jslint esnext: true*/
-
-	"use strict";
-
-	module.exports = {
-	    polygons: []
-	};
-
-/***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*jslint node: true */
 	/*jslint esnext: true*/
 	/*global google*/
-	/*global map*/
-	'use strict';
-	var DataStore = __webpack_require__(4);
-	var InstanceStore = __webpack_require__(2);
-	var Utils = __webpack_require__(6);
-	var EventListeners = __webpack_require__(1);
+	///*global map*/
 
+	'use strict';
+	var Utils = __webpack_require__(7);
 	var mapevents = google.maps.event;
 
 	module.exports = function Polygon(polygon) {
-	        var opts = {
-	                fillColor: Utils.getRandomHexColor(),
-	                fillOpacity: 0.4,
-	                strokeWeight: 4,
-	                clickable: true,
-	                editable: true
-	        };
-	        polygon.name = Utils.makeUuid();
-	        polygon.setOptions(opts); //set the options
+	      var Actions = __webpack_require__(1);
+	      var opts = {
+	            fillColor: Utils.getRandomHexColor(),
+	            fillOpacity: 0.4,
+	            strokeWeight: 4,
+	            clickable: true,
+	            editable: true
+	      };
+	      polygon.name = Utils.makeUuid();
+	      polygon.setOptions(opts); //set the options
 
-	        //Wire events to this polygon
-	        console.log(EventListeners);
-	        mapevents.addListener(polygon.getPath(), 'set_at', EventListeners.polygonChanged);
-	        mapevents.addListener(polygon.getPath(), 'insert_at', EventListeners.polygonChanged);
+	      //Wire events to this polygon
+	      //TODO: consider if this makes sense here
+	      mapevents.addListener(polygon.getPath(), 'set_at', function () {
+	            return Actions.polygonChanged(polygon);
+	      });
+	      mapevents.addListener(polygon.getPath(), 'insert_at', function () {
+	            return Actions.polygonChanged(polygon);
+	      });
 
-	        return polygon;
+	      return polygon;
 	};
 
 /***/ },
 /* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*jslint node: true */
+	/*jslint esnext: true*/
+	/*global google*/
+	'use strict';
+
+	var Utils = __webpack_require__(7);
+
+	module.exports = function Marker(object) {
+	    var InstanceStore = __webpack_require__(2);
+
+	    var marker = new google.maps.Marker({ //this represents the actual google map marker object attched to the marker
+	        position: new google.maps.LatLng(object.latitude, object.longitude),
+	        map: InstanceStore.map,
+	        originalObject: object //provide a reference to the original object,
+	    });
+	    marker.name = Utils.makeUuid();
+
+	    return marker;
+	};
+
+/***/ },
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*jslint node: true */

@@ -60,6 +60,12 @@
         var sampleData = [{name: "Ray", location: {lat: 40.00, lng: -85.12}},{name: "hevily", location: {lat: 41.00, lng: -85.12}}];
         ready(function () {
            TurfCut.init('map');
+           TurfCut.actions.loadMarkers(sampleData, function (input) {
+                return {
+                    latitude: input.location.lat,
+                    longitude: input.location.lng
+                }
+           });
         });
 
     </script>    

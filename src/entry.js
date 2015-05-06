@@ -2,15 +2,18 @@
 /*jslint esnext: true*/
 "use strict";
 
-let EventListeners = require('./EventListeners');
+let Actions = require('./Actions');
 let InstanceStore = require('./InstanceStore');
+let DataStore = require('./DataStore');
 let Initializers = require('./Initializers');
 
 module.exports = {
     init(mapId, gmapOpts = {}, dmOpts = {}) {
         Initializers.initMap(mapId, gmapOpts);
         Initializers.initDrawingManager(dmOpts);
-        EventListeners.overlayComplete(InstanceStore.drawingManager);
+        Actions.overlayComplete();
     },
-    mapComponents: InstanceStore
+    mapComponents: InstanceStore,
+    dataStore: DataStore,
+    actions: Actions
 };
