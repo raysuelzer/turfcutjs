@@ -15,7 +15,6 @@ module.exports = {
         });
 
         InstanceStore.map = new google.maps.Map(document.getElementById(mapId), opts);
-
     },
 
     initDrawingManager(opts = {}) {

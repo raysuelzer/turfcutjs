@@ -22,14 +22,12 @@ var calculateTurfs = function () {
             };
         });
 
-
     let duplicateMarkers = turfs.map((x) => {return x.markers;})
                                             .reduce( (a,b) => {return a.concat(b);})
                                             .filter( (value,index,self) =>
                                                     {
                                                         return self.indexOf(value) !== index;
                                                     });
-
 
     let deDuped = turfs.map((turf) => {
                                         let r = {}; //resulting object
@@ -77,6 +75,7 @@ module.exports = {
         return data.markers.push(marker);
     },
     getTurfs() {
+        console.log('calculatTurfs');
         return calculateTurfs();
     }
 };

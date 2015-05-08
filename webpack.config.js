@@ -6,6 +6,9 @@ var webpack = require('webpack');
 
 module.exports = {
     context: __dirname + "/src",
+      plugins: [
+          new webpack.NewWatchingPlugin()
+    ],
     entry: "./entry",
     output: {
         path: __dirname + "/dist",
@@ -22,9 +25,8 @@ module.exports = {
     resolve: {
         // Allow require('./blah') to require blah.js
         extensions: ['', '.js']
-    },
-    externals: {
-        // Use external version of React (from CDN for client-side, or bundled with ReactJS.NET for server-side)
+    }//,
+    //externals: {
        // react: 'React'
-    }
+    //}
 };
