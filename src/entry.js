@@ -5,13 +5,14 @@
 let Actions = require('./Actions');
 let InstanceStore = require('./InstanceStore');
 let DataStore = require('./DataStore');
-let Initializers = require('./Initializers');
+let TCMap = require('./objects/map');
+let DrawingManager = require('./objects/DrawingManager');
 
+//TODO: Only allow init one time
 module.exports = {
-    init(mapId, gmapOpts = {}, dmOpts = {}) {
-        Initializers.initMap(mapId, gmapOpts);
-        Initializers.initDrawingManager(dmOpts);
-        Actions.overlayComplete();
+    init(mapId, mapOpts = {}, dmOpts = {}) {
+        let _map = InstanceStore.tc_map = TCMap(mapId, mapOpts);
+        let _drawing_manager = InstanceStore.drawingManager = DrawingManager(_map, dmOpts);
     },
     mapComponents: InstanceStore,
     dataStore: DataStore,

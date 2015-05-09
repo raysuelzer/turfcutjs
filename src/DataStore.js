@@ -1,58 +1,49 @@
 /*jslint node: true */
 /*jslint esnext: true*/
-/*global google*/
-/*global _*/
 
 "use strict";
 
-var geometry = google.maps.geometry;
+
 var data = {
     polygons: [],
     markers: []
 };
 
-var calculateTurfs = function () {
-    let turfs = data.polygons.map(function (polygon) {
-        return {
-            polygon: polygon,
-            markers: data.markers
-                            .filter( (marker) => {
-                                    return geometry.poly.containsLocation(marker.getPosition(), polygon);
-                            })
-            };
-        });
-
-    let duplicateMarkers = turfs.map((x) => {return x.markers;})
-                                            .reduce( (a,b) => {return a.concat(b);})
-                                            .filter( (value,index,self) =>
-                                                    {
-                                                        return self.indexOf(value) !== index;
-                                                    });
-
-    let deDuped = turfs.map((turf) => {
-                                        let r = {}; //resulting object
-                                        r.polygon = turf.polygon;
-                                        r.markers = _.difference(turf.markers, duplicateMarkers);
-
-                                        _.remove(duplicateMarkers, function(marker) {
-                                                            return turf.markers.indexOf(marker) !== -1;
-                                                        });
-
-                                        return r;
-                                    });
-
-    let result = deDuped.filter(function (turf) {
-        if (turf.markers.length === 0) {
-            turf.polygon.setMap(null);
-            //TODO: this is modifying the internal store of the polygons.
-            //It is not being treated as immutable.
-            _.pull(data.polygons, turf.polygon);
-            return false;
-        }
-        return true;
-    });
-    return result;
+var destroyPolygon = function (polygon) {
+        polygon.setMap(null);
+        data.polygons.splice(data.polygons.indexOf(polygon), 1);
+        polygon = null; //clean up memory leaks :-P
 };
+
+
+var calculateTurfs = function () {
+    let mappedMarkers = [],
+        turfs = data.polygons
+                    //reverse the order so newest are mapped first
+                    .reverse()
+                    //map each turf
+                    .map( (polygon) => {
+                            let r = {
+                                polygon: polygon,
+                                markers: data.markers
+                                        .filter( (marker) => (marker.isWithinPolygon(polygon) && mappedMarkers.indexOf(marker) === -1) )
+                    };
+                        //store the markers that fall in this turf in an array
+                        //to check against later, so we don't have markers in two a
+                        r.markers.forEach(m => mappedMarkers.push(m));
+                        return r;
+                    }),
+
+            emptyTurfs = turfs.filter((x) => x.markers.length === 0),
+            nonEmptyTurfs = turfs.filter((x) => x.markers.length > 0);
+
+
+    //remove polygons wihout markers
+    //destroy empty turfs
+    emptyTurfs.forEach(t => destroyPolygon(t.polygon));
+
+    return nonEmptyTurfs;
+    };
 
 
 module.exports = {
@@ -62,9 +53,13 @@ module.exports = {
     getPolygons() {
         return data.polygons;
     },
+    destroyPolygon(polygon) {
+        destroyPolygon(polygon);
+        return data.polygons;
+    },
     //use for bulk adding markers
     addMarkers(markers) {
-        var _markers = data.markers.concat(markers);
+        let _markers = data.markers = data.markers.concat(markers);
         if (data.polygons.length > 0)
             calculateTurfs();
 
@@ -74,8 +69,11 @@ module.exports = {
     addMarker(marker) {
         return data.markers.push(marker);
     },
-    getTurfs() {
-        console.log('calculatTurfs');
+    getMarkers() {
+        return data.markers;
+    },
+    calculateTurfs: calculateTurfs,
+    getTurfs() { //alias
         return calculateTurfs();
     }
 };

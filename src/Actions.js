@@ -1,27 +1,21 @@
 /*jslint node: true */
 /*jslint esnext: true*/
-/*global google*/
-///*global _*/
 
-let InstanceStore = require('./InstanceStore');
+
 let DataStore = require('./DataStore');
 let Polygon = require('./objects/Polygon');
 let AddressMarker = require('./objects/AddressMarker');
 
 
-let mapevents =  google.maps.event;
-
 let Actions = {
-    overlayComplete: function() {
-        mapevents.addListener(InstanceStore.drawingManager, 'overlaycomplete', function (e) {
-            let polygon = Polygon(e.overlay);
-            DataStore.addPolygon(polygon);
-        });
+    polygonAdded: function(polygon) {
+        var p = Polygon(polygon);
+        DataStore.addPolygon(p);
+        return p;
     },
     polygonChanged: function(polygon) {
-       //Todo: make this emit an event
-        DataStore.getTurfs();
-       return polygon;
+            DataStore.getTurfs();
+            return polygon;
     },
     loadMarkers(arr, mapFn) {
         if (mapFn === undefined)

@@ -2,7 +2,7 @@
 /*jslint esnext: true*/
 
 module.exports = {
-    map: null,
+    tc_map: null,
     drawingManager: null,
     pointerControl: null,
     polygonControl: null

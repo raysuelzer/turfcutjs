@@ -10,5 +10,17 @@ module.exports = {
             var r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
             return v.toString(16);
         });
+    },
+    createDivWithClass(className) {
+        let div = document.createElement('div');
+        div.className = className;
+        return div;
+    },
+    extend(obj, source) {
+        //get own property keys from obj
+        //get own property keys from source
+        //replace any obj keys that are defined on source
+        //add any source keys that are not on unject.
+        return [obj, source];
     }
 };
