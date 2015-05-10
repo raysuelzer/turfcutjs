@@ -2,11 +2,12 @@
 /*jslint esnext: true*/
 
 "use strict";
-let Utils = require('../utils');
-let mapProviderListeners = require('../MapEvents');
+let Utils = require('../utils'),
+    GMapEvents = require('../GMapEvents'),
+    AppDispatcher = require('../AppDispatcher'),
+    CONSTANTS = require('../Constants');
 
 module.exports = function Polygon(polygon) {
-         let Actions = require('../Actions');
           let opts = {
                 fillColor: Utils.getRandomHexColor(),
                 fillOpacity: 0.40,
@@ -18,7 +19,12 @@ module.exports = function Polygon(polygon) {
             polygon.setOptions(opts); //set the options
 
             //Wire events to this polygon
-            mapProviderListeners.polygonChangedListener(polygon,  () => Actions.polygonChanged(polygon));
+            GMapEvents.addPolygonChangedListener(polygon,  () => AppDispatcher.handleAction(CONSTANTS.ACTION_TYPES.POLYGON_CHANGED_ACTION, polygon));
+
+            polygon.destroy = function () {
+                polygon.setMap(null);
+                AppDispatcher.handleAction(CONSTANTS.ACTION_TYPES.POLYGON_SELF_DESTRUCT, polygon);
+            };
 
         return polygon;
     };

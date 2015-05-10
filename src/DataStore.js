@@ -2,21 +2,40 @@
 /*jslint esnext: true*/
 
 "use strict";
+let EventEmitter = require('events').EventEmitter,
+    AppDispatcher = require('./AppDispatcher'),
+    CONSTANTS = require('./Constants'),
+    assign = require('object-assign');
 
-
-var data = {
+//*The data that is held in the store*/
+let data = {
     polygons: [],
     markers: []
 };
 
-var destroyPolygon = function (polygon) {
+//*Internal function to remove polygons*//
+let destroyPolygon = function (polygon) {
         polygon.setMap(null);
         data.polygons.splice(data.polygons.indexOf(polygon), 1);
         polygon = null; //clean up memory leaks :-P
-};
+    },
 
+    addPolygon = function(polygon) {
+        data.polygons.push(polygon);
+    },
 
-var calculateTurfs = function () {
+    addMarkers = function(markers) {
+        let _markers = data.markers = data.markers.concat(markers);
+        data.markers = data.markers;
+        return _markers;
+    },
+
+    calculateTurfs = function () {
+    if (data.polygons.length ===  0) {
+        console.warn("You don't have any shapes drawn");
+        return [];
+    }
+
     let mappedMarkers = [],
         turfs = data.polygons
                     //reverse the order so newest are mapped first
@@ -46,34 +65,59 @@ var calculateTurfs = function () {
     };
 
 
-module.exports = {
-    addPolygon(polygon) {
-        data.polygons.push(polygon);
-    },
-    getPolygons() {
-        return data.polygons;
-    },
-    destroyPolygon(polygon) {
-        destroyPolygon(polygon);
-        return data.polygons;
-    },
-    //use for bulk adding markers
-    addMarkers(markers) {
-        let _markers = data.markers = data.markers.concat(markers);
-        if (data.polygons.length > 0)
-            calculateTurfs();
+let DataStore = assign({}, EventEmitter.prototype,
 
-        return _markers;
+{
+    addChangeListener(change_event, callback) {
+        this.on(change_event, callback);
     },
-    //use for small number of markers
-    addMarker(marker) {
-        return data.markers.push(marker);
+    /**
+     * @param {function} callback
+     */
+    removeChangeListener(change_event, callback) {
+        this.removeListener(change_event, callback);
     },
-    getMarkers() {
-        return data.markers;
+
+    emitChange(change_event, payload) {
+        //Indicates that something has changed in
+        //the store that would impact the calculated turf
+        //Other places in the app hook into this event
+        //in order to update the UI.
+        this.emit(CONSTANTS.UPDATE_TYPES.TURF_CHANGED);
+        this.emit(change_event, payload);
     },
-    calculateTurfs: calculateTurfs,
-    getTurfs() { //alias
-        return calculateTurfs();
+
+    getData() {
+        var _data = data;
+        _data.turfs = calculateTurfs();
+        return _data;
     }
-};
+});
+
+AppDispatcher.register(function (action) {
+    let a = action.action;
+    switch (a.type) {
+        case CONSTANTS.ACTION_TYPES.POLYGON_ADDED_ACTION:
+            addPolygon(a.data);
+            DataStore.emitChange(CONSTANTS.UPDATE_TYPES.POLYGON_ADDED, a.data);
+            break;
+        case CONSTANTS.ACTION_TYPES.POLYGON_CHANGED_ACTION:
+            DataStore.emitChange(CONSTANTS.UPDATE_TYPES.POLYGON_CHANGED, a.data);
+            break;
+        case CONSTANTS.ACTION_TYPES.POLYGON_SELF_DESTRUCT:
+            destroyPolygon(a.data);
+            DataStore.emitChange(CONSTANTS.UPDATE_TYPES.POLYGON_DESTROYED);
+            break;
+        case CONSTANTS.ACTION_TYPES.MARKERS_ADDED_ACTION:
+            addMarkers(a.data);
+            DataStore.emitChange(CONSTANTS.UPDATE_TYPES.MARKERS_ADDED, a.data);
+            break;
+        default:
+            // no ops
+    }
+});
+
+module.exports = DataStore;
+
+
+

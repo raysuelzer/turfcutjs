@@ -2,12 +2,10 @@
 /*jslint esnext: true*/
 /*global google*/
 
-// A wrapper for map events
-// Goal here is to create an interface that will work with major map apis
+let gevents = google.maps.event;
 
-var gevents = google.maps.event;
-let googleMapEvents = {
-        polygonChangedListener: function (polygon, callback) {
+let listeners = {
+        addPolygonChangedListener: function (polygon, callback) {
             gevents.addListener(polygon.getPath(), 'set_at',  callback);
             gevents.addListener(polygon.getPath(), 'insert_at',  callback);
         },
@@ -19,4 +17,4 @@ let googleMapEvents = {
         }
 };
 
-module.exports = googleMapEvents;
+module.exports = listeners;

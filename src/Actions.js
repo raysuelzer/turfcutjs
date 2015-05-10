@@ -1,33 +1,22 @@
 /*jslint node: true */
 /*jslint esnext: true*/
 
-
-let DataStore = require('./DataStore');
-let Polygon = require('./objects/Polygon');
-let AddressMarker = require('./objects/AddressMarker');
-
+let CONSTANTS = require('./Constants'),
+    AddressMarker = require('./objects/AddressMarker'),
+    InstanceStore = require('./InstanceStore'),
+    AppDispatcher = require('./AppDispatcher');
 
 let Actions = {
-    polygonAdded: function(polygon) {
-        var p = Polygon(polygon);
-        DataStore.addPolygon(p);
-        return p;
-    },
-    polygonChanged: function(polygon) {
-            DataStore.getTurfs();
-            return polygon;
-    },
     loadMarkers(arr, mapFn) {
         if (mapFn === undefined)
             mapFn = function(i){return i;};
 
         let parsedMarkers = arr.map(mapFn)
             .map(function(item) {
-                return AddressMarker(item);
+                return AddressMarker(item, InstanceStore.gmap);
             });
 
-        DataStore.addMarkers(parsedMarkers);
-        return parsedMarkers;
+        AppDispatcher.handleAction(CONSTANTS.ACTION_TYPES.MARKERS_ADDED_ACTION, parsedMarkers);
     }
 };
 
