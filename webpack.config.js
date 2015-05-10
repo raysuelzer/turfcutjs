@@ -7,14 +7,13 @@ var webpack = require('webpack');
 module.exports = {
     context: __dirname + "/src",
       plugins: [
-          new webpack.NewWatchingPlugin()
+          new webpack.OldWatchingPlugin()
     ],
     entry: "./entry",
     output: {
         path: __dirname + "/dist",
         filename: "turfcut.js",
         libraryTarget: "umd",
-        // name of the global var: "Foo"
         library: "TurfCut"
     },
     module: {
@@ -23,10 +22,6 @@ module.exports = {
         ],
     },
     resolve: {
-        // Allow require('./blah') to require blah.js
         extensions: ['', '.js']
-    }//,
-    //externals: {
-       // react: 'React'
-    //}
+    }
 };
